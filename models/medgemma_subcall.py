@@ -1,7 +1,7 @@
 import requests
 
 class MedGemmaSubcall:
-    def __init__(self, model_name="gemma:2b-instruct"):
+    def __init__(self, model_name="gemma:7b-instruct"):
         self.model_name = model_name
 
     def generate(self, prompt, max_new_tokens=256, temperature=0.1):
