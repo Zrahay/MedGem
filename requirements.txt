@@ -3,6 +3,7 @@ requests>=2.31.0
 
 # Database
 duckdb>=0.10.0
+psycopg2-binary>=2.9.9
 
 # Config handling
 pyyaml>=6.0
