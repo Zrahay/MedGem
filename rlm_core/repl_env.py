@@ -38,10 +38,7 @@ class REPLEnvironment:
 
         try:
             with redirect_stdout(stdout_buffer):
-                try:
-                    exec(code, self.globals)
-                except Exception as e:
-                    print("⚠️ Execution error:", e)
+                exec(code, self.globals)
 
             output = stdout_buffer.getvalue()
             return {
@@ -51,11 +48,22 @@ class REPLEnvironment:
                 "variables": list(self.globals.keys())
             }
 
-        except Exception:
+        except SyntaxError as e:
             return {
                 "success": False,
                 "stdout": stdout_buffer.getvalue(),
-                "error": traceback.format_exc(),
+                "error": f"SyntaxError: {e.msg} at line {e.lineno}: {e.text}",
+                "variables": list(self.globals.keys())
+            }
+
+        except Exception as e:
+            # Get the last few lines of traceback for context
+            tb_lines = traceback.format_exc().strip().split('\n')
+            short_tb = '\n'.join(tb_lines[-3:]) if len(tb_lines) > 3 else '\n'.join(tb_lines)
+            return {
+                "success": False,
+                "stdout": stdout_buffer.getvalue(),
+                "error": f"{type(e).__name__}: {e}\n{short_tb}",
                 "variables": list(self.globals.keys())
             }
 

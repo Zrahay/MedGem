@@ -21,30 +21,39 @@ def get_patients_with_diagnosis(icd_code_prefix):
     sql = """
     SELECT DISTINCT subject_id
     FROM diagnoses_icd
-    WHERE icd_code LIKE %s
+    WHERE icd_code LIKE ?
     """
-    return [row["subject_id"] for row in db.query(sql, (f"{icd_code_prefix}%",))]
+    result = db.query(sql, (f"{icd_code_prefix}%",))
+    if isinstance(result, dict) and "error" in result:
+        return []
+    return [row["subject_id"] for row in result]
 
 
 def get_admissions_for_patients(subject_ids):
     """
     Returns admissions for a list of patients.
     """
-    sql = """
+    if not subject_ids:
+        return []
+    placeholders = ",".join(["?" for _ in subject_ids])
+    sql = f"""
     SELECT hadm_id, subject_id, admittime, dischtime
     FROM admissions
-    WHERE subject_id = ANY(%s)
+    WHERE subject_id IN ({placeholders})
     """
-    return db.query(sql, (subject_ids,))
+    return db.query(sql, tuple(subject_ids))
 
 
 def get_icu_stays_for_patients(subject_ids):
     """
     Returns ICU stays for a list of patients.
     """
-    sql = """
+    if not subject_ids:
+        return []
+    placeholders = ",".join(["?" for _ in subject_ids])
+    sql = f"""
     SELECT stay_id, hadm_id, subject_id, intime, outtime
     FROM icustays
-    WHERE subject_id = ANY(%s)
+    WHERE subject_id IN ({placeholders})
     """
-    return db.query(sql, (subject_ids,))
+    return db.query(sql, tuple(subject_ids))

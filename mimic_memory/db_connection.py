@@ -36,13 +36,23 @@ class MIMICDatabase:
 
     def query(self, sql, params=None):
         """
-        Executes a SQL query safely and returns results.
+        Executes a SQL query safely and returns results as a list of dicts.
+        Works consistently for both DuckDB and PostgreSQL.
         """
         try:
             cur = self.conn.cursor()
             cur.execute(sql, params or ())
-            result = cur.fetchall()
+            rows = cur.fetchall()
+            
+            # Get column names from cursor description
+            columns = [desc[0] for desc in cur.description]
             cur.close()
-            return result
+            
+            # Convert to list of dicts for consistent access by column name
+            if self.db_type == "duckdb":
+                return [dict(zip(columns, row)) for row in rows]
+            else:
+                # PostgreSQL with RealDictCursor already returns dicts
+                return rows
         except Exception as e:
             return {"error": str(e)}
